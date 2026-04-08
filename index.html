@@ -103,7 +103,7 @@
 
         buyBtn.addEventListener('click', () => {
             // UPI Payment Link
-            const upiId = "તમારી_UPI_ID@okicici"; // અહીં તમારી ID નાખો
+            const upiId = "8758245232@fam"; // અહીં તમારી ID નાખો
             const upiUrl = `upi://pay?pa=${upiId}&pn=VivekFarming&am=5&cu=INR`;
             
             window.location.href = upiUrl;
@@ -113,3 +113,120 @@
                 isPurchased = true;
                 document.getElementById('status').innerText = "Unlocked (Premium)";
                 buyBtn.style.
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <title>Ramdev Dairy Farm - FS14 Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
+        #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; border: 2px solid #e67e22; }
+        .btn-panel { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+        button { padding: 15px 25px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; color: white; box-shadow: 0 4px #999; }
+        button:active { box-shadow: 0 2px #666; transform: translateY(2px); }
+        .buy { background: #27ae60; }
+        .tochan { background: #c0392b; }
+        .horn { background: #f1c40f; color: black; }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <h2 style="margin:0; color:#e67e22;">રામદેવ ડેરી ફાર્મ 🐄</h2>
+    <p>પશુધન: ગાય, ભેંસ, ઘોડા</p>
+    <div id="stats">પૈસા: ₹0 | સ્ટેટસ: લોક</div>
+</div>
+
+<div class="btn-panel">
+    <button class="buy" onclick="makePayment()">₹5 માં ટ્રેક્ટર લો 🚜</button>
+    <button class="horn" onclick="playHorn()">મોટા હોર્ન 📣</button>
+    <button class="tochan" onclick="startTochan()">ટોચન મોડ 🔗</button>
+</div>
+
+<script>
+    // 1. Scene Setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb); // આકાશ
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // 2. Ground & Farm (લીલું ખેતર)
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x4caf50 }));
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    // 3. Lighting
+    const light = new THREE.DirectionalLight(0xffffff, 1.2);
+    light.position.set(10, 20, 10);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    // 4. Dairy Farm Animals (ગાય-ભેંસ માટે બોક્સ - રિયલ મોડેલ લોડ કરવા માટે GLTFLoader જોઈશે)
+    function createAnimal(x, z, color) {
+        const animal = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1, 1.5), new THREE.MeshStandardMaterial({ color: color }));
+        animal.position.set(x, 0.5, z);
+        scene.add(animal);
+    }
+    createAnimal(5, -5, 0xffffff); // સફેદ ગાય
+    createAnimal(7, -5, 0x222222); // કાળી ભેંસ
+
+    // 5. Tractor (Mahindra/Swaraj Style)
+    const tractor = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1, 2), new THREE.MeshStandardMaterial({ color: 0xd32f2f }));
+    body.position.y = 0.8;
+    tractor.add(body);
+    scene.add(tractor);
+
+    camera.position.set(0, 5, 10);
+    camera.lookAt(tractor.position);
+
+    // 6. Game Logic
+    let isUnlocked = false;
+    let moveSpeed = 0;
+
+    function makePayment() {
+        const upi = "તમારી_UPI_ID@upi"; // <--- અહીં તમારી સાચી UPI ID નાખો
+        window.location.href = `upi://pay?pa=${upi}&pn=VivekFarming&am=5&cu=INR`;
+        
+        setTimeout(() => {
+            isUnlocked = true;
+            document.getElementById('stats').innerHTML = "પૈસા: ₹5 | સ્ટેટસ: અનલોક ✅";
+            alert("ટ્રેક્ટર અને ડેરી ફાર્મ અનલોક થઈ ગયું છે!");
+        }, 5000);
+    }
+
+    function playHorn() {
+        if(!isUnlocked) return alert("પહેલા ખરીદી કરો");
+        const audio = new Audio('https://www.soundjay.com/transportation/sounds/truck-horn-1.mp3');
+        audio.play();
+    }
+
+    function startTochan() {
+        if(!isUnlocked) return alert("ટોચન માટે ટ્રેક્ટર જરૂરી છે");
+        alert("ટોચન મોડ ચાલુ: ટ્રેક્ટરની શક્તિ માપવામાં આવી રહી છે...");
+    }
+
+    // Controls
+    window.addEventListener('keydown', (e) => {
+        if(!isUnlocked) return;
+        if(e.key === "ArrowUp") moveSpeed = -0.2;
+        if(e.key === "ArrowDown") moveSpeed = 0.2;
+    });
+    window.addEventListener('keyup', () => moveSpeed = 0);
+
+    // Animation Loop
+    function animate() {
+        requestAnimationFrame(animate);
+        tractor.translateZ(moveSpeed);
+        camera.position.x = tractor.position.x;
+        camera.position.z = tractor.position.z + 10;
+        renderer.render(scene, camera);
+    }
+    animate();
+</script>
+
+</body>
+</html>
