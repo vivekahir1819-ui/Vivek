@@ -3,92 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>વિવેકનું ખેતર અને ડેરી ફાર્મ 🚜</title>
+    <title>Ramdev Dairy Farm & Tractor Simulation 3D</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #f7f9f2; margin: 0; padding: 10px; }
-        .game-box { max-width: 450px; margin: auto; background: white; border: 4px solid #4CAF50; border-radius: 20px; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
-        h1 { color: #2e7d32; font-size: 22px; margin-bottom: 5px; }
-        .stats { display: flex; justify-content: space-around; background: #e8f5e9; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; font-size: 18px; color: #1b5e20; border: 1px solid #c8e6c9; }
-        .farm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .plot { height: 110px; background: #8d6e63; border: 3px solid #5d4037; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 40px; transition: 0.2s; position: relative; }
-        .plot:active { transform: scale(0.95); }
-        .plot b { font-size: 12px; color: white; background: rgba(0,0,0,0.5); padding: 2px 5px; border-radius: 5px; margin-top: 5px; }
-        .status-msg { margin-top: 15px; font-size: 14px; color: #555; background: #fffde7; padding: 5px; border-radius: 5px; }
-        .btn-reset { margin-top: 15px; background: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        #ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            padding: 12px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            pointer-events: auto;
+        }
+        #buy-btn { background: #27ae60; color: white; }
+        #horn-btn { background: #f1c40f; }
+        #tochan-btn { background: #e67e22; color: white; }
     </style>
 </head>
 <body>
 
-    <div class="game-box">
-        <h1>🚜 વિવેક ફાર્મિંગ 🌾</h1>
-        
-        <div class="stats">
-            <span>પૈસા: ₹<span id="money">100</span></span>
-        </div>
+    <div id="ui-layer">
+        <h2>રામદેવ ડેરી ફાર્મ 🐄</h2>
+        <p>સ્કોર: <span id="score">0</span></p>
+        <p>ટ્રેક્ટર: <span id="status">Lock</span></p>
+    </div>
 
-        <div class="farm-grid">
-            <div class="plot" onclick="clickPlot(0)" id="p0">🟫<b>ખાલી ખેતર</b></div>
-            <div class="plot" onclick="clickPlot(1)" id="p1">🟫<b>ખાલી ખેતર</b></div>
-            <div class="plot" onclick="clickPlot(2)" id="p2">🐄<b>ડેરી ફાર્મ</b></div>
-            <div class="plot" onclick="clickPlot(3)" id="p3">🟫<b>ખાલી ખેતર</b></div>
-        </div>
-
-        <div class="status-msg" id="msg">ખેતરમાં વાવણી કરવા ક્લિક કરો (ખર્ચ ₹20)</div>
-        
-        <button class="btn-reset" onclick="location.reload()">ફરીથી શરૂ કરો</button>
+    <div class="controls">
+        <button id="buy-btn">₹5 માં ટ્રેક્ટર ખરીદો 🚜</button>
+        <button id="horn-btn">મોટા હોર્ન 📣</button>
+        <button id="tochan-btn">ટોચન મોડ 🔗</button>
+        <button id="music-btn" onclick="toggleMusic()">ગીત વગાડો 🎵</button>
     </div>
 
     <script>
-        let money = 100;
-        let plots = ["empty", "empty", "cow", "empty"];
+        // --- 1. Basic 3D Scene Setup ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // આકાશનો કલર
 
-        function clickPlot(id) {
-            let el = document.getElementById('p' + id);
-            let msg = document.getElementById('msg');
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-            // ૧. જો ખેતર ખાલી હોય તો વાવણી કરો (ખર્ચ ૨૦)
-            if (plots[id] === "empty") {
-                if (money >= 20) {
-                    money -= 20;
-                    plots[id] = "growing";
-                    el.innerHTML = "🌱<b>વાવણી કરી...</b>";
-                    el.style.background = "#aed581";
-                    updateStats();
-                    msg.innerText = "પાક ઉગી રહ્યો છે, થોડી રાહ જુઓ...";
+        // --- 2. Lighting ---
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 10, 7.5).normalize();
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
 
-                    setTimeout(() => {
-                        plots[id] = "ready";
-                        el.innerHTML = "🌽<b>પાક તૈયાર</b>";
-                        el.style.background = "#ffeb3b";
-                        msg.innerText = "પાક તૈયાર! લણણી કરવા ક્લિક કરો.";
-                    }, 4000);
-                } else {
-                    msg.innerText = "પૈસા નથી! પાક વેચીને કમાણી કરો.";
-                }
-            } 
-            // ૨. તૈયાર પાકની લણણી (કમાણી ૫૦)
-            else if (plots[id] === "ready") {
-                money += 50;
-                plots[id] = "empty";
-                el.innerHTML = "🟫<b>ખાલી ખેતર</b>";
-                el.style.background = "#8d6e63";
-                updateStats();
-                msg.innerText = "પાક વેચાયો! ₹50 મળ્યા.";
-            }
-            // ૩. ડેરી ફાર્મ (ગાયમાંથી દૂધ - કમાણી ૧૦)
-            else if (plots[id] === "cow") {
-                money += 10;
-                updateStats();
-                msg.innerText = "ગાયનું દૂધ વેચ્યું! ₹10 મળ્યા.";
-                el.style.transform = "scale(1.1)";
-                setTimeout(() => el.style.transform = "scale(1)", 100);
-            }
-        }
+        // --- 3. The Ground (ખેતર/ફાર્મ) ---
+        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2d5a27 }); // લીલું ઘાસ
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
 
-        function updateStats() {
-            document.getElementById('money').innerText = money;
-        }
-    </script>
+        // --- 4. Tractor Model (Swaraj Style - Placeholder) ---
+        const tractorGroup = new THREE.Group();
+        const bodyGeom = new THREE.BoxGeometry(1, 1, 2);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff0000 }); // લાલ ટ્રેક્ટર
+        const body = new THREE.Mesh(bodyGeom, bodyMat);
+        tractorGroup.add(body);
 
-</body>
-</html>
+        // ટાયર ઉમેરવા
+        const wheelGeom = new THREE.CylinderGeometry(0.4, 0.4, 0.4, 32);
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+        const w1 = new THREE.Mesh(wheelGeom, wheelMat);
+        w1.rotation.z = Math.PI / 2;
+        w1.position.set(0.6, -0.2, 0.7);
+        tractorGroup.add(w1);
+
+        tractorGroup.position.y = 0.6;
+        scene.add(tractorGroup);
+
+        camera.position.set(0, 5, 10);
+        camera.lookAt(tractorGroup.position);
+
+        // --- 5. Payment & Logic ---
+        let isPurchased = false;
+        const buyBtn = document.getElementById('buy-btn');
+
+        buyBtn.addEventListener('click', () => {
+            // UPI Payment Link
+            const upiId = "તમારી_UPI_ID@okicici"; // અહીં તમારી ID નાખો
+            const upiUrl = `upi://pay?pa=${upiId}&pn=VivekFarming&am=5&cu=INR`;
+            
+            window.location.href = upiUrl;
+
+            // પેમેન્ટ પછી અનલોક કરવા માટે (Demo)
+            setTimeout(() => {
+                isPurchased = true;
+                document.getElementById('status').innerText = "Unlocked (Premium)";
+                buyBtn.style.
